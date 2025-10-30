@@ -285,18 +285,73 @@
   </div>
 </div>
 <script>
+// Función para capitalizar la primera letra de cada palabra
+function capitalizeName(name) {
+  return name
+    .trim()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+}
+
+// Aplicar capitalización automática al campo de nombre
+document.getElementById('user').addEventListener('input', (e) => {
+  const cursorPos = e.target.selectionStart;
+  const value = e.target.value;
+  const capitalized = capitalizeName(value);
+  
+  if (value !== capitalized) {
+    e.target.value = capitalized;
+    e.target.setSelectionRange(cursorPos, cursorPos);
+  }
+});
+
+// Función para añadir un mensaje al contenedor
+function appendMessage(message, isNew = false) {
+  const messagesContainer = document.getElementById('messages');
+  const emptyState = messagesContainer.querySelector('.empty-state');
+  if (emptyState) emptyState.remove();
+
+  const msgDiv = document.createElement('div');
+  msgDiv.className = 'msg';
+  if (message.id) msgDiv.dataset.id = message.id;
+
+  const nameDiv = document.createElement('div');
+  nameDiv.className = 'msg-user';
+  nameDiv.textContent = message.user || 'Anónimo';
+
+  const contentDiv = document.createElement('div');
+  contentDiv.className = 'msg-content';
+  contentDiv.textContent = message.content;
+
+  const metaDiv = document.createElement('div');
+  metaDiv.className = 'msg-meta';
+  metaDiv.textContent = message.created_at || 'Ahora';
+
+  msgDiv.appendChild(nameDiv);
+  msgDiv.appendChild(contentDiv);
+  msgDiv.appendChild(metaDiv);
+
+  if (isNew) msgDiv.style.animation = 'slideIn 0.3s ease-out';
+
+  messagesContainer.appendChild(msgDiv);
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// Manejar envío del formulario
 document.querySelector('.chat-form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  const sendBtn = document.getElementById('send');
   const userInput = document.getElementById('user');
   const contentInput = document.getElementById('content');
   
-  const user = capitalizeName(userInput.value || 'Anónimo');
   const content = contentInput.value.trim();
-  
   if (!content) return;
 
+  const user = capitalizeName(userInput.value || 'Anónimo');
+
   // Deshabilitar botón mientras se envía
-  const sendBtn = document.getElementById('send');
   sendBtn.disabled = true;
   sendBtn.style.opacity = '0.6';
 
@@ -305,60 +360,48 @@ document.querySelector('.chat-form').addEventListener('submit', async (e) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-        'Accept': 'application/json'
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
       },
       body: JSON.stringify({ user, content })
     });
 
-    if (res.ok) {
-      // intentar leer la respuesta JSON
-      let payload = null;
-      try { payload = await res.json(); } catch (err) { /* no JSON */ }
+    const responseData = await res.text();
+    console.log('Respuesta del servidor:', responseData);
 
-      // limpiar input
+    if (res.ok) {
+      // Limpiar input
       contentInput.value = '';
       contentInput.focus();
 
-      // actualizar UI localmente
-      const messagesContainer = document.getElementById('messages');
-      const emptyState = messagesContainer.querySelector('.empty-state');
-      if (emptyState) emptyState.remove();
-
-      const msgDiv = document.createElement('div');
-      msgDiv.className = 'msg';
-      if (payload && payload.id) msgDiv.dataset.id = payload.id;
-
-      const nameDiv = document.createElement('div');
-      nameDiv.className = 'msg-user';
-      nameDiv.textContent = payload?.user || user;
-
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'msg-content';
-      contentDiv.textContent = payload?.content || content;
-
-      const metaDiv = document.createElement('div');
-      metaDiv.className = 'msg-meta';
-      metaDiv.textContent = payload?.created_at || 'Ahora';
-
-      msgDiv.appendChild(nameDiv);
-      msgDiv.appendChild(contentDiv);
-      msgDiv.appendChild(metaDiv);
-
-      messagesContainer.appendChild(msgDiv);
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+      // Añadir mensaje a la UI
+      let message = { user, content };
+      try {
+        const json = JSON.parse(responseData);
+        message = { ...message, ...json };
+      } catch (err) {
+        console.warn('La respuesta no es JSON:', err);
+      }
+      
+      appendMessage(message, true);
     } else {
-      console.error('Error en respuesta del servidor:', res.status);
-      alert('Error al enviar el mensaje. Por favor, intenta de nuevo.');
+      throw new Error(`Error ${res.status}: ${responseData}`);
     }
   } catch (error) {
     console.error('Error al enviar mensaje:', error);
-    alert('Error de red al enviar el mensaje.');
+    alert('Error al enviar el mensaje. Por favor, intenta de nuevo.');
   } finally {
     sendBtn.disabled = false;
     sendBtn.style.opacity = '1';
   }
 });
+
+// Auto-scroll al final cuando llegan nuevos mensajes
+const messagesContainer = document.querySelector('.messages');
+const observer = new MutationObserver(() => {
+  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
+observer.observe(messagesContainer, { childList: true, subtree: true });
 </script>
 </body>
 </html>
