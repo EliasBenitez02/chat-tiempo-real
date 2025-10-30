@@ -4,138 +4,360 @@
   <meta charset="utf-8">
   <title>Chat en tiempo real | Laravel + Reverb</title>
   @vite(['resources/css/app.css','resources/js/app.js'])
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: linear-gradient(120deg, #f8fafc 0%, #e0e7ef 100%);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       margin: 0;
       min-height: 100vh;
-    }
-    .chat-container {
-      max-width: 480px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 4px 24px 0 #0001;
-      padding: 32px 28px 24px 28px;
-    }
-    .chat-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 18px;
+      justify-content: center;
+      padding: 20px;
     }
+    
+    .chat-container {
+      max-width: 520px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 90vh;
+    }
+    
+    .chat-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chat-header-icon {
+      font-size: 2rem;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
     .chat-header h1 {
       font-size: 1.5rem;
-      font-weight: 600;
+      font-weight: 700;
       margin: 0;
-      color: #2d3748;
+      letter-spacing: -0.02em;
     }
+    
+    .chat-header-subtitle {
+      font-size: 0.85rem;
+      opacity: 0.9;
+      margin-top: 2px;
+      font-weight: 400;
+    }
+    
     .messages {
-      max-height: 340px;
+      flex: 1;
       overflow-y: auto;
-      margin-bottom: 18px;
-      border: 1px solid #e2e8f0;
+      padding: 24px;
+      background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+    }
+    
+    .messages::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .messages::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
       border-radius: 10px;
-      background: #f9fafb;
-      padding: 16px 12px;
     }
-    .msg {
+    
+    .messages::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #94a3b8;
+    }
+    
+    .empty-state-icon {
+      font-size: 3rem;
       margin-bottom: 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #e2e8f0;
+      opacity: 0.5;
     }
-    .msg:last-child {
-      border-bottom: none;
+    
+    .msg {
+      margin-bottom: 16px;
+      animation: slideIn 0.3s ease-out;
+      background: #ffffff;
+      padding: 14px 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      border-left: 3px solid #667eea;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+    
+    .msg:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
     .msg-user {
       font-weight: 600;
-      color: #2563eb;
-    }
-    .msg-content {
-      margin: 2px 0 0 0;
-      color: #222;
-    }
-    .msg-meta {
-      font-size: 11px;
-      color: #64748b;
-      margin-top: 2px;
-    }
-    .chat-form {
+      color: #667eea;
+      font-size: 0.95rem;
       display: flex;
-      gap: 8px;
-      margin-top: 8px;
+      align-items: center;
+      gap: 6px;
     }
+    
+    .msg-user::before {
+      content: '👤';
+      font-size: 0.85rem;
+    }
+    
+    .msg-content {
+      margin: 8px 0 6px 0;
+      color: #1e293b;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+    
+    .msg-meta {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    
+    .chat-form-wrapper {
+      padding: 20px 24px 24px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+    }
+    
+    .input-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    
     .chat-form input {
-      padding: 10px 12px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      font-size: 1rem;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      font-size: 0.95rem;
       outline: none;
-      transition: border 0.2s;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+      background: #f8fafc;
     }
+    
     .chat-form input:focus {
-      border: 1.5px solid #2563eb;
+      border-color: #667eea;
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
     }
+    
+    #user {
+      width: 140px;
+    }
+    
+    #content {
+      flex: 1;
+    }
+    
     .chat-form button {
-      background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: #fff;
       border: none;
-      border-radius: 8px;
-      padding: 0 22px;
-      font-size: 1rem;
+      border-radius: 12px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
+    
     .chat-form button:hover {
-      background: linear-gradient(90deg, #1d4ed8 0%, #2563eb 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+    
+    .chat-form button:active {
+      transform: translateY(0);
+    }
+    
+    .send-icon {
+      font-size: 1.1rem;
+    }
+    
+    @media (max-width: 500px) {
+      .input-group {
+        flex-direction: column;
+      }
+      
+      #user {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
 <div class="chat-container">
   <div class="chat-header">
-    <span style="font-size:1.7rem;">💬</span>
-    <h1>Chat en tiempo real</h1>
+    <span class="chat-header-icon">💬</span>
+    <div>
+      <h1>Chat en tiempo real</h1>
+      <div class="chat-header-subtitle">Powered by Laravel + Reverb</div>
+    </div>
   </div>
+  
   <div class="messages" id="messages">
     @forelse($messages as $m)
       <div class="msg" data-id="{{ $m->id }}">
-        <span class="msg-user">{{ $m->user ?? 'Anon' }}</span>
+        <div class="msg-user">{{ $m->user ?? 'Anónimo' }}</div>
         <div class="msg-content">{{ $m->content }}</div>
         <div class="msg-meta">{{ $m->created_at }}</div>
       </div>
     @empty
-      <div style="text-align:center;color:#888;">No hay mensajes aún.</div>
+      <div class="empty-state">
+        <div class="empty-state-icon">💭</div>
+        <div>No hay mensajes aún. ¡Sé el primero en escribir!</div>
+      </div>
     @endforelse
   </div>
-  <form class="chat-form" onsubmit="return false;">
-    <input id="user" type="text" placeholder="Tu nombre (opcional)" autocomplete="off" />
-    <input id="content" type="text" placeholder="Escribe tu mensaje..." style="flex:1" autocomplete="off" />
-    <button id="send" type="submit">Enviar</button>
-  </form>
+  
+  <div class="chat-form-wrapper">
+    <form class="chat-form" onsubmit="return false;">
+      <div class="input-group">
+        <input 
+          id="user" 
+          type="text" 
+          placeholder="Tu nombre" 
+          autocomplete="off"
+        />
+        <input 
+          id="content" 
+          type="text" 
+          placeholder="Escribe tu mensaje..." 
+          autocomplete="off"
+        />
+      </div>
+      <button id="send" type="submit">
+        <span class="send-icon">📤</span>
+        Enviar
+      </button>
+    </form>
+  </div>
 </div>
 <script>
 document.querySelector('.chat-form').addEventListener('submit', async (e) => {
-    const user = document.getElementById('user').value;
-    const content = document.getElementById('content').value.trim();
-    if (!content) return;
+  e.preventDefault();
+  const userInput = document.getElementById('user');
+  const contentInput = document.getElementById('content');
+  
+  const user = capitalizeName(userInput.value || 'Anónimo');
+  const content = contentInput.value.trim();
+  
+  if (!content) return;
 
+  // Deshabilitar botón mientras se envía
+  const sendBtn = document.getElementById('send');
+  sendBtn.disabled = true;
+  sendBtn.style.opacity = '0.6';
+
+  try {
     const res = await fetch("{{ route('chat.store') }}", {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            user,
-            content
-        })
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ user, content })
     });
 
-    if (res.ok) document.getElementById('content').value = '';
+    if (res.ok) {
+      // intentar leer la respuesta JSON
+      let payload = null;
+      try { payload = await res.json(); } catch (err) { /* no JSON */ }
+
+      // limpiar input
+      contentInput.value = '';
+      contentInput.focus();
+
+      // actualizar UI localmente
+      const messagesContainer = document.getElementById('messages');
+      const emptyState = messagesContainer.querySelector('.empty-state');
+      if (emptyState) emptyState.remove();
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'msg';
+      if (payload && payload.id) msgDiv.dataset.id = payload.id;
+
+      const nameDiv = document.createElement('div');
+      nameDiv.className = 'msg-user';
+      nameDiv.textContent = payload?.user || user;
+
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'msg-content';
+      contentDiv.textContent = payload?.content || content;
+
+      const metaDiv = document.createElement('div');
+      metaDiv.className = 'msg-meta';
+      metaDiv.textContent = payload?.created_at || 'Ahora';
+
+      msgDiv.appendChild(nameDiv);
+      msgDiv.appendChild(contentDiv);
+      msgDiv.appendChild(metaDiv);
+
+      messagesContainer.appendChild(msgDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } else {
+      console.error('Error en respuesta del servidor:', res.status);
+      alert('Error al enviar el mensaje. Por favor, intenta de nuevo.');
+    }
+  } catch (error) {
+    console.error('Error al enviar mensaje:', error);
+    alert('Error de red al enviar el mensaje.');
+  } finally {
+    sendBtn.disabled = false;
+    sendBtn.style.opacity = '1';
+  }
 });
 </script>
 </body>
