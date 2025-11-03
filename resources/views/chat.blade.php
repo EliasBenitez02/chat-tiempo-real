@@ -3,282 +3,103 @@
 <head>
   <meta charset="utf-8">
   <title>Chat en tiempo real | Laravel + Reverb</title>
-  @vite(['resources/css/app.css','resources/js/app.js'])
+  <script src="https://cdn.tailwindcss.com"></script>
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    
-    .chat-container {
-      max-width: 520px;
-      width: 100%;
-      background: #ffffff;
-      border-radius: 24px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      max-height: 90vh;
-    }
-    
-    .chat-header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-      padding: 24px 28px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .chat-header-icon {
-      font-size: 2rem;
-      animation: pulse 2s ease-in-out infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    
-    .chat-header h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin: 0;
-      letter-spacing: -0.02em;
-    }
-    
-    .chat-header-subtitle {
-      font-size: 0.85rem;
-      opacity: 0.9;
-      margin-top: 2px;
-      font-weight: 400;
-    }
-    
-    .messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 24px;
-      background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
-    }
-    
-    .messages::-webkit-scrollbar {
-      width: 6px;
-    }
-    
-    .messages::-webkit-scrollbar-track {
-      background: transparent;
-    }
-    
-    .messages::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 10px;
-    }
-    
-    .messages::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 40px 20px;
-      color: #94a3b8;
-    }
-    
-    .empty-state-icon {
-      font-size: 3rem;
-      margin-bottom: 12px;
-      opacity: 0.5;
-    }
-    
-    .msg {
-      margin-bottom: 16px;
-      animation: slideIn 0.3s ease-out;
-      background: #ffffff;
-      padding: 14px 16px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      border-left: 3px solid #667eea;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    
-    .msg:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
+  @vite(['resources/css/chat.css', 'resources/js/app.js'])
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+          },
+          borderWidth: {
+            '3': '3px',
+          },
+          keyframes: {
+            fadeInUp: {
+              'from': { 
+                transform: 'translateY(10px)',
+                opacity: '0'
+              },
+              'to': { 
+                transform: 'translateY(0)',
+                opacity: '1'
+              }
+            }
+          },
+          animation: {
+            fadeInUp: 'fadeInUp 0.5s ease-out forwards'
+          }
+        }
       }
     }
-    
-    .msg-user {
-      font-weight: 600;
-      color: #667eea;
-      font-size: 0.95rem;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .msg-user::before {
-      content: '👤';
-      font-size: 0.85rem;
-    }
-    
-    .msg-content {
-      margin: 8px 0 6px 0;
-      color: #1e293b;
-      line-height: 1.5;
-      font-size: 0.95rem;
-    }
-    
-    .msg-meta {
-      font-size: 0.75rem;
-      color: #94a3b8;
-      font-weight: 500;
-    }
-    
-    .chat-form-wrapper {
-      padding: 20px 24px 24px;
-      background: #ffffff;
-      border-top: 1px solid #e2e8f0;
-    }
-    
-    .input-group {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    
-    .chat-form input {
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 2px solid #e2e8f0;
-      font-size: 0.95rem;
-      outline: none;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-      background: #f8fafc;
-    }
-    
-    .chat-form input:focus {
-      border-color: #667eea;
-      background: #ffffff;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-    
-    #user {
-      width: 140px;
-    }
-    
-    #content {
-      flex: 1;
-    }
-    
-    .chat-form button {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-      border: none;
-      border-radius: 12px;
-      padding: 12px 28px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: 'Inter', sans-serif;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-    
-    .chat-form button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-    }
-    
-    .chat-form button:active {
-      transform: translateY(0);
-    }
-    
-    .send-icon {
-      font-size: 1.1rem;
-    }
-    
-    @media (max-width: 500px) {
-      .input-group {
-        flex-direction: column;
-      }
-      
-      #user {
-        width: 100%;
-      }
-    }
-  </style>
+  </script>
 </head>
-<body>
-<div class="chat-container">
-  <div class="chat-header">
-    <span class="chat-header-icon">💬</span>
+<body class="min-h-screen flex items-center justify-center p-5 body-gradient font-[Inter]">
+<div class="w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div class="chat-gradient text-white p-6 flex items-center gap-3 shadow-md">
+    <span class="text-3xl animate-bounce">💬</span>
     <div>
-      <h1>Chat en tiempo real</h1>
-      <div class="chat-header-subtitle">Powered by Laravel + Reverb</div>
+      <h1 class="text-2xl font-bold tracking-tight m-0">Chat en tiempo real</h1>
+      <div class="text-sm opacity-90 mt-0.5">Powered by Laravel + Reverb</div>
     </div>
   </div>
   
-  <div class="messages" id="messages">
+  <div id="messages" class="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white messages">
     @forelse($messages as $m)
-      <div class="msg" data-id="{{ $m->id }}">
-        <div class="msg-user">{{ $m->user ?? 'Anónimo' }}</div>
-        <div class="msg-content">{{ $m->content }}</div>
-        <div class="msg-meta">{{ $m->created_at }}</div>
+      <div class="mb-4 bg-white p-5 rounded-xl shadow-sm border-l-3 border-indigo-500 transition-all hover:-translate-y-0.5 hover:shadow-md animate-fadeInUp group" data-id="{{ $m->id }}">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2 text-indigo-500 font-semibold text-[0.95rem]">
+            <span class="text-xl group-hover:scale-110 transition-transform">👤</span>
+            <span class="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+              {{ $m->user ?? 'Anónimo' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2 text-xs font-medium bg-indigo-50 px-3 py-1.5 rounded-full">
+            <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-indigo-600">
+              {{ \Carbon\Carbon::parse($m->created_at)->timezone('America/Argentina/Buenos_Aires')->locale('es')->isoFormat('D MMM YYYY, HH:mm') }}
+            </span>
+          </div>
+        </div>
+        <div class="text-slate-800 leading-relaxed text-[0.95rem] pl-3 border-l-2 border-indigo-100 group-hover:border-indigo-300 transition-colors">{{ $m->content }}</div>
       </div>
     @empty
-      <div class="empty-state">
-        <div class="empty-state-icon">💭</div>
+      <div class="text-center py-10 px-5 text-slate-400">
+        <div class="text-5xl mb-3 opacity-50">💭</div>
         <div>No hay mensajes aún. ¡Sé el primero en escribir!</div>
       </div>
     @endforelse
   </div>
   
-  <div class="chat-form-wrapper">
-    <form class="chat-form" onsubmit="return false;">
-      <div class="input-group">
+  <div class="p-5 pb-6 bg-white border-t border-gray-200">
+    <form class="space-y-3" onsubmit="return false;">
+      <div class="flex gap-2.5 sm:flex-row flex-col">
         <input 
           id="user" 
           type="text" 
           placeholder="Tu nombre" 
           autocomplete="off"
+          class="w-full sm:w-36 px-4 py-3 rounded-xl border-2 border-gray-200 text-[0.95rem] bg-gray-50 focus:border-indigo-500 focus:bg-white focus:ring-3 focus:ring-indigo-100 transition-all outline-none"
         />
         <input 
           id="content" 
           type="text" 
           placeholder="Escribe tu mensaje..." 
           autocomplete="off"
+          class="flex-1 px-4 py-3 rounded-xl border-2 border-gray-200 text-[0.95rem] bg-gray-50 focus:border-indigo-500 focus:bg-white focus:ring-3 focus:ring-indigo-100 transition-all outline-none"
         />
       </div>
-      <button id="send" type="submit">
-        <span class="send-icon">📤</span>
+      <button 
+        id="send" 
+        type="submit"
+        class="chat-gradient text-white px-7 py-3 rounded-xl text-[0.95rem] font-semibold cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-200 active:translate-y-0 flex items-center gap-1.5 shadow-md shadow-indigo-200"
+      >
+        <span class="text-lg">📤</span>
         Enviar
       </button>
     </form>
@@ -295,7 +116,10 @@ function capitalizeName(name) {
 }
 
 // Aplicar capitalización automática al campo de nombre
-document.getElementById('user').addEventListener('input', (e) => {
+const userInput = document.getElementById('user');
+
+// Capitalizar cuando se escribe
+userInput.addEventListener('input', (e) => {
   const cursorPos = e.target.selectionStart;
   const value = e.target.value;
   const capitalized = capitalizeName(value);
@@ -306,54 +130,140 @@ document.getElementById('user').addEventListener('input', (e) => {
   }
 });
 
+// Capitalizar al inicio y al perder foco
+userInput.addEventListener('blur', (e) => {
+  e.target.value = capitalizeName(e.target.value);
+});
+
 // Función para añadir un mensaje al contenedor
+function formatDateTime() {
+  // Crear fecha en zona horaria de Argentina
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('es-AR', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'America/Argentina/Buenos_Aires'
+  });
+  
+  // Formatear la fecha
+  let parts = formatter.formatToParts(now);
+  let formatted = '';
+  
+  // Construir el string manualmente para asegurar el formato correcto
+  parts.forEach(part => {
+    switch(part.type) {
+      case 'day':
+        formatted += part.value + ' ';
+        break;
+      case 'month':
+        formatted += part.value + ' ';
+        break;
+      case 'year':
+        formatted += part.value + ', ';
+        break;
+      case 'hour':
+        formatted += part.value + ':';
+        break;
+      case 'minute':
+        formatted += part.value;
+        break;
+    }
+  });
+  
+  return formatted;
+}
+
 function appendMessage(message, isNew = false) {
   const messagesContainer = document.getElementById('messages');
   const emptyState = messagesContainer.querySelector('.empty-state');
   if (emptyState) emptyState.remove();
 
-  const msgDiv = document.createElement('div');
-  msgDiv.className = 'msg';
+  // Asegurar que el nombre y el mensaje tengan la primera letra en mayúscula
+  message.user = message.user ? capitalizeName(message.user) : 'Anónimo';
+  message.content = message.content.charAt(0).toUpperCase() + message.content.slice(1);
+
+  const dateStr = message.created_at || formatDateTime();
+  const msgHtml = `
+    <div class="mb-4 bg-white p-5 rounded-xl shadow-sm border-l-3 border-indigo-500 transition-all hover:-translate-y-0.5 hover:shadow-md group">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2 text-indigo-500 font-semibold text-[0.95rem]">
+          <span class="text-xl group-hover:scale-110 transition-transform">👤</span>
+          <span class="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+            ${message.user}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 text-xs font-medium bg-indigo-50 px-3 py-1.5 rounded-full">
+          <svg class="w-3.5 h-3.5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="text-indigo-600">${dateStr}</span>
+        </div>
+      </div>
+      <div class="text-slate-800 leading-relaxed text-[0.95rem] pl-3 border-l-2 border-indigo-100 group-hover:border-indigo-300 transition-colors">
+        ${message.content}
+      </div>
+    </div>
+  `.trim();
+
+  // Crear un contenedor temporal
+  const temp = document.createElement('div');
+  temp.innerHTML = msgHtml;
+  const msgDiv = temp.firstElementChild;
+  
   if (message.id) msgDiv.dataset.id = message.id;
 
-  const nameDiv = document.createElement('div');
-  nameDiv.className = 'msg-user';
-  nameDiv.textContent = message.user || 'Anónimo';
+  // Añadir el mensaje con una animación suave
+  requestAnimationFrame(() => {
+    msgDiv.style.opacity = '0';
+    msgDiv.style.transform = 'translateY(10px)';
+    messagesContainer.appendChild(msgDiv);
 
-  const contentDiv = document.createElement('div');
-  contentDiv.className = 'msg-content';
-  contentDiv.textContent = message.content;
+    // Scroll inmediato para mensajes nuevos
+    if (isNew) {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
 
-  const metaDiv = document.createElement('div');
-  metaDiv.className = 'msg-meta';
-  metaDiv.textContent = message.created_at || 'Ahora';
-
-  msgDiv.appendChild(nameDiv);
-  msgDiv.appendChild(contentDiv);
-  msgDiv.appendChild(metaDiv);
-
-  if (isNew) msgDiv.style.animation = 'slideIn 0.3s ease-out';
-
-  messagesContainer.appendChild(msgDiv);
-  messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    // Animar la entrada del mensaje
+    requestAnimationFrame(() => {
+      msgDiv.style.transition = 'all 0.2s ease-out';
+      msgDiv.style.opacity = '1';
+      msgDiv.style.transform = 'translateY(0)';
+    });
+  });
 }
 
 // Manejar envío del formulario
-document.querySelector('.chat-form').addEventListener('submit', async (e) => {
+document.querySelector('form').addEventListener('submit', async (e) => {
   e.preventDefault();
   
   const sendBtn = document.getElementById('send');
+  if (sendBtn.disabled) return; // Evitar envíos múltiples
+  
   const userInput = document.getElementById('user');
   const contentInput = document.getElementById('content');
   
-  const content = contentInput.value.trim();
+  let content = contentInput.value.trim();
   if (!content) return;
-
+  
+  // Asegurar que el contenido del mensaje comience con mayúscula
+  content = content.charAt(0).toUpperCase() + content.slice(1);
   const user = capitalizeName(userInput.value || 'Anónimo');
 
   // Deshabilitar botón mientras se envía
   sendBtn.disabled = true;
   sendBtn.style.opacity = '0.6';
+  
+  // Preparar el mensaje local inmediatamente
+  const localMessage = { 
+    user, 
+    content,
+    created_at: formatDateTime()
+  };
 
   try {
     const res = await fetch("{{ route('chat.store') }}", {
@@ -366,31 +276,43 @@ document.querySelector('.chat-form').addEventListener('submit', async (e) => {
       body: JSON.stringify({ user, content })
     });
 
+    // Mostrar el mensaje localmente primero para feedback inmediato
+    appendMessage(localMessage, true);
+    
+    // Limpiar input y dar focus
+    contentInput.value = '';
+    contentInput.focus();
+
     const responseData = await res.text();
-    console.log('Respuesta del servidor:', responseData);
-
-    if (res.ok) {
-      // Limpiar input
-      contentInput.value = '';
-      contentInput.focus();
-
-      // Añadir mensaje a la UI
-      let message = { user, content };
-      try {
-        const json = JSON.parse(responseData);
-        message = { ...message, ...json };
-      } catch (err) {
-        console.warn('La respuesta no es JSON:', err);
-      }
-      
-      appendMessage(message, true);
-    } else {
+    
+    if (!res.ok) {
       throw new Error(`Error ${res.status}: ${responseData}`);
+    }
+
+    // Actualizar el mensaje con datos del servidor si es necesario
+    try {
+      const json = JSON.parse(responseData);
+      if (json.id) {
+        // El mensaje ya está mostrado, solo actualizamos si hay cambios necesarios
+        const msgElement = document.querySelector(`[data-id="${json.id}"]`);
+        if (msgElement) {
+          // Actualizar solo si hay cambios significativos
+          if (json.created_at) {
+            const timeElement = msgElement.querySelector('.text-indigo-600');
+            if (timeElement) {
+              timeElement.textContent = json.created_at;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('La respuesta no es JSON:', err);
     }
   } catch (error) {
     console.error('Error al enviar mensaje:', error);
     alert('Error al enviar el mensaje. Por favor, intenta de nuevo.');
   } finally {
+    // Reactivar el botón
     sendBtn.disabled = false;
     sendBtn.style.opacity = '1';
   }

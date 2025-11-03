@@ -1,0 +1,26 @@
+/* Estilos personalizados para la barra de desplazamiento */
+.messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.messages::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Gradientes personalizados */
+.chat-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.body-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
